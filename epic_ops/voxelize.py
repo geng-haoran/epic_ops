@@ -10,7 +10,7 @@ with redirect_stdout(io.StringIO()):
 from .expand import expand_csr
 
 
-def voxelize(
+def voxelize_raw(
     points: torch.Tensor,
     pt_features: torch.Tensor,
     batch_offsets: torch.Tensor,
@@ -35,6 +35,7 @@ def voxelize(
             max_points_per_voxel=max_points_per_voxel,
             max_voxels=max_voxels,
         )
+        
 
         batch_indices, _ = expand_csr(voxel_batch_splits, voxel_coords.shape[0])
 
@@ -56,6 +57,41 @@ def voxelize(
 
     return voxel_features, voxel_coords, batch_indices, pc_voxel_id
 
+
+def voxelize(
+    points: torch.Tensor,
+    pt_features: torch.Tensor,
+    batch_offsets: torch.Tensor,
+    voxel_size: torch.Tensor,
+    points_range_min: torch.Tensor,
+    points_range_max: torch.Tensor,
+    reduction: str = "mean",
+    max_points_per_voxel: int = 9223372036854775807,
+    max_voxels: int = 9223372036854775807,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    num_points = points.shape[0]
+    import pdb 
+    # pdb.set_trace()
+    with torch.no_grad():
+        (voxel_coords, voxel_point_indices, voxel_point_row_splits, voxel_batch_splits,) = torch.ops.open3d.voxelize(points,row_splits=batch_offsets,voxel_size=voxel_size,points_range_min=points_range_min,points_range_max=points_range_max,max_points_per_voxel=max_points_per_voxel,max_voxels=max_voxels,)
+        batch_indices, _ = expand_csr(voxel_batch_splits, voxel_coords.shape[0])
+
+        voxel_indices, num_points_per_voxel = expand_csr(voxel_point_row_splits, voxel_point_indices.shape[0])
+
+        if voxel_point_indices.shape[0] == num_points:
+            pc_voxel_id = torch.empty_like(voxel_point_indices)
+        else:
+            pc_voxel_id = torch.full(
+                (num_points,), -1,
+                dtype=voxel_point_indices.dtype, device=voxel_point_indices.device
+            )
+        pc_voxel_id.scatter_(dim=0, index=voxel_point_indices, src=voxel_indices)
+
+    # pdb.set_trace()
+    pt_features = pt_features[voxel_point_indices]
+    voxel_features = torch.segment_reduce(pt_features, reduction, lengths=num_points_per_voxel)
+
+    return voxel_features, voxel_coords, batch_indices, pc_voxel_id
 
 def test_1():
     points = torch.as_tensor([
