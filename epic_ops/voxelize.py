@@ -70,8 +70,6 @@ def voxelize(
     max_voxels: int = 9223372036854775807,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     num_points = points.shape[0]
-    import pdb 
-    # pdb.set_trace()
     with torch.no_grad():
         (voxel_coords, voxel_point_indices, voxel_point_row_splits, voxel_batch_splits,) = torch.ops.open3d.voxelize(points,row_splits=batch_offsets,voxel_size=voxel_size,points_range_min=points_range_min,points_range_max=points_range_max,max_points_per_voxel=max_points_per_voxel,max_voxels=max_voxels,)
         batch_indices, _ = expand_csr(voxel_batch_splits, voxel_coords.shape[0])
