@@ -34,7 +34,7 @@ def voxelize_raw(
             points_range_max=torch.as_tensor(points_range_max, dtype=torch.float32),
             max_points_per_voxel=max_points_per_voxel,
             max_voxels=max_voxels,
-        )
+        ) # type: ignore
         
 
         batch_indices, _ = expand_csr(voxel_batch_splits, voxel_coords.shape[0])
@@ -167,7 +167,7 @@ def test_2():
     voxel_features, voxel_coords, pc_voxel_id = voxelize(
         points,
         pt_features,
-        batch_offsets_csr=torch.as_tensor([0, 8, 15], dtype=torch.int64, device="cuda"),
+        batch_offsets_csr=torch.as_tensor([0, 8, 15], dtype=torch.int64, device="cuda"), # type: ignore
         voxel_size=torch.as_tensor([1.0, 1.0, 1.0], dtype=torch.float32),
         points_range_min=torch.as_tensor([0, 0, 0], dtype=torch.float32),
         points_range_max=torch.as_tensor([5, 5, 5], dtype=torch.float32),
