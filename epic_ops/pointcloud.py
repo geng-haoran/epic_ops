@@ -3,7 +3,7 @@ import pandas as pd
 
 from pyntcloud import PyntCloud
 
-def save_point_cloud_to_ply(points, colors, save_root = "outout", save_name = "output.ply"):
+def save_pc_to_ply(points, colors, save_root = "outout", save_name = "output.ply"):
     
     cloud = PyntCloud(pd.DataFrame(
         # same arguments that you are passing to visualize_pcl
